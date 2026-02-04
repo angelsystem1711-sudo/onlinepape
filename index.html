@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Papelería Express - Paquetes de Útiles Escolares</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- INICIO DEL CONTENIDO PRINCIPAL -->
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <div class="logo">
+                    <i class="fas fa-book"></i>
+                    <span>Papelería Express</span>
+                </div>
+                <nav class="nav">
+                    <a href="#inicio">Inicio</a>
+                    <a href="#paquetes">Paquetes</a>
+                    <a href="#catalogo">Catálogo</a>
+                    <a href="#beneficios">Beneficios</a>
+                    <a href="#contacto">Contacto</a>
+                </nav>
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="hero" id="inicio">
+            <div class="hero-content">
+                <h1>Úitles Escolares de Calidad</h1>
+                <p>Todo lo que necesitas para triunfar en el aula, desde preescolar hasta licenciatura</p>
+                <button class="btn btn-primary" onclick="scrollToSection('paquetes')">Explorar Paquetes</button>
+            </div>
+            <div class="hero-image">
+                <i class="fas fa-graduation-cap"></i>
+                <i class="fas fa-pencil"></i>
+                <i class="fas fa-backpack"></i>
+            </div>
+        </section>
+
+        <!-- Sección Copias e Impresiones (Destacada) -->
+        <section class="copias" id="copias">
+            <div class="container copias-hero">
+                <div class="copias-text">
+                    <h2>Copias e Impresiones Profesionales</h2>
+                    <p class="copias-lead">Impresiones nítidas y copias rápidas: desde tarea escolar hasta pedidos empresariales. Calidad, rapidez y precios pensados para ti.</p>
+                    <div class="copias-cta">
+                        <button class="btn btn-primary" onclick="abrirModalCopias()">Ver más</button>
+                        <a href="#contacto" class="btn btn-secondary">Solicitar cotización</a>
+                    </div>
+                </div>
+                <div class="copias-visual" aria-hidden="true">
+                    <i class="fas fa-print"></i>
+                    <i class="fas fa-copy"></i>
+                </div>
+            </div>
+        </section>
+
+    <!-- Paquetes Section -->
+    <section class="paquetes" id="paquetes">
+        <div class="container">
+            <h2>Nuestros Paquetes</h2>
+            <p class="seccion-subtitulo">Elige el paquete perfecto para tu nivel educativo</p>
+            
+            <div class="paquetes-grid">
+                <!-- Preescolar -->
+                <div class="paquete-card">
+                    <div class="paquete-header">
+                        <i class="fas fa-child"></i>
+                        <h3>Preescolar</h3>
+                    </div>
+                    <span class="badge badge-promo" id="promo-paquete-preescolar" style="display:none;"></span>
+                    <ul class="paquete-items">
+                        <li><i class="fas fa-check"></i> Crayones de colores</li>
+                        <li><i class="fas fa-check"></i> Lápices de madera</li>
+                        <li><i class="fas fa-check"></i> Cuaderno de actividades</li>
+                        <li><i class="fas fa-check"></i> Pegamento y tijeras</li>
+                        <li><i class="fas fa-check"></i> Mochila colorida</li>
+                    </ul>
+                    <p class="precio">$15.99</p>
+                    <button class="btn btn-secondary" onclick="agregarPaqueteAlCarrito('Preescolar', 15.99, 'Crayones de colores|Lápices de madera|Cuaderno de actividades|Pegamento y tijeras|Mochila colorida')">Comprar</button>
+                </div>
+
+                <!-- Primaria Baja -->
+                <div class="paquete-card">
+                    <div class="paquete-header">
+                        <i class="fas fa-book"></i>
+                        <h3>Primaria (1-3)</h3>
+                    </div>
+                    <span class="badge badge-promo" id="promo-paquete-primaria13" style="display:none;"></span>
+                    <ul class="paquete-items">
+                        <li><i class="fas fa-check"></i> Lápices y borrador</li>
+                        <li><i class="fas fa-check"></i> Cuadernos variados</li>
+                        <li><i class="fas fa-check"></i> Regla y compás</li>
+                        <li><i class="fas fa-check"></i> Colores y marcadores</li>
+                        <li><i class="fas fa-check"></i> Mochila ergonómica</li>
+                    </ul>
+                    <p class="precio">$24.99</p>
+                    <button class="btn btn-secondary" onclick="agregarPaqueteAlCarrito('Primaria 1-3', 24.99, 'Lápices y borrador|Cuadernos variados|Regla y compás|Colores y marcadores|Mochila ergonómica')">Comprar</button>
+                </div>
+
+                <!-- Primaria Alta -->
+                <div class="paquete-card destacado">
+                    <div class="paquete-header">
+                        <i class="fas fa-books"></i>
+                        <h3>Primaria (4-6)</h3>
+                    </div>
+                    <span class="badge badge-promo" id="promo-paquete-primaria46" style="display:none;"></span>
+                    <span class="badge">Más Popular</span>
+                    <ul class="paquete-items">
+                        <li><i class="fas fa-check"></i> Útiles completos</li>
+                        <li><i class="fas fa-check"></i> Calculadora básica</li>
+                        <li><i class="fas fa-check"></i> Diccionario de bolsillo</li>
+                        <li><i class="fas fa-check"></i> Estuche organizador</li>
+                        <li><i class="fas fa-check"></i> Mochila premium</li>
+                    </ul>
+                    <p class="precio">$34.99</p>
+                    <button class="btn btn-primary" onclick="agregarPaqueteAlCarrito('Primaria 4-6', 34.99, 'Útiles completos|Calculadora básica|Diccionario de bolsillo|Estuche organizador|Mochila premium')">Comprar</button>
+                </div>
+
+                <!-- Secundaria -->
+                <div class="paquete-card">
+                    <div class="paquete-header">
+                        <i class="fas fa-users"></i>
+                        <h3>Secundaria</h3>
+                    </div>
+                    <span class="badge badge-promo" id="promo-paquete-secundaria" style="display:none;"></span>
+                    <ul class="paquete-items">
+                        <li><i class="fas fa-check"></i> Útiles profesionales</li>
+                        <li><i class="fas fa-check"></i> Calculadora científica</li>
+                        <li><i class="fas fa-check"></i> Recursos digitales</li>
+                        <li><i class="fas fa-check"></i> Tablet stylus</li>
+                        <li><i class="fas fa-check"></i> Mochila resistente</li>
+                    </ul>
+                    <p class="precio">$54.99</p>
+                    <button class="btn btn-secondary" onclick="agregarPaqueteAlCarrito('Secundaria', 54.99, 'Útiles profesionales|Calculadora científica|Recursos digitales|Tablet stylus|Mochila resistente')">Comprar</button>
+                </div>
+
+                <!-- Preparatoria -->
+                <div class="paquete-card">
+                    <div class="paquete-header">
+                        <i class="fas fa-graduation-cap"></i>
+                        <h3>Preparatoria</h3>
+                    </div>
+                    <span class="badge badge-promo" id="promo-paquete-prepa" style="display:none;"></span>
+                    <ul class="paquete-items">
+                        <li><i class="fas fa-check"></i> Útiles de calidad</li>
+                        <li><i class="fas fa-check"></i> Software académico</li>
+                        <li><i class="fas fa-check"></i> Organizador digital</li>
+                        <li><i class="fas fa-check"></i> Lámpara de estudio</li>
+                        <li><i class="fas fa-check"></i> Mochila ejecutiva</li>
+                    </ul>
+                    <p class="precio">$74.99</p>
+                    <button class="btn btn-secondary" onclick="agregarPaqueteAlCarrito('Preparatoria', 74.99, 'Útiles de calidad|Software académico|Organizador digital|Lámpara de estudio|Mochila ejecutiva')">Comprar</button>
+                </div>
+
+                <!-- Licenciatura -->
+                <div class="paquete-card">
+                    <div class="paquete-header">
+                        <i class="fas fa-university"></i>
+                        <h3>Licenciatura</h3>
+                    </div>
+                    <span class="badge badge-promo" id="promo-paquete-licenciatura" style="display:none;"></span>
+                    <ul class="paquete-items">
+                        <li><i class="fas fa-check"></i> Kit profesional completo</li>
+                        <li><i class="fas fa-check"></i> Acceso a plataformas</li>
+                        <li><i class="fas fa-check"></i> Asesoría personalizada</li>
+                        <li><i class="fas fa-check"></i> Soporte técnico</li>
+                        <li><i class="fas fa-check"></i> Bolsa profesional</li>
+                    </ul>
+                    <p class="precio">$99.99</p>
+                    <button class="btn btn-secondary" onclick="agregarPaqueteAlCarrito('Licenciatura', 99.99, 'Kit profesional completo|Acceso a plataformas|Asesoría personalizada|Soporte técnico|Bolsa profesional')">Comprar</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Catálogo de Productos -->
+    <section class="catalogo" id="catalogo">
+        <div class="container">
+            <h2>Catálogo de Útiles</h2>
+            <p class="seccion-subtitulo">Explora nuestros productos disponibles</p>
+            <div id="catalogoProductos" class="productos-grid">
+                <!-- Los productos se mostrarán aquí dinámicamente -->
+            </div>
+            <div class="catalogo-footer">
+                <button class="btn btn-primary btn-ver-mas" onclick="abrirVistaCompleta()">
+                    <i class="fas fa-th"></i> Ver Todos los Productos
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal de Costos - Copias e Impresiones -->
+    <div class="modal-copias" id="modalCopias" style="display: none;">
+        <div class="modal-copias-contenido">
+            <div class="modal-header">
+                <h2>Costos de Copias e Impresiones</h2>
+                <button class="btn-cerrar-modal" onclick="cerrarModalCopias()">✕</button>
+            </div>
+
+            <div class="modal-copias-body">
+                <p class="nota">Precios orientativos. Para pedidos especiales o volúmenes más grandes, solicita cotización.</p>
+                <div class="tabla-costos">
+                    <div class="tabla-col">
+                        <h3>Mayoreo</h3>
+                        <ul>
+                            <li>A4 Blanco y Negro: $0.30 c/u (mín. 1000)</li>
+                            <li>A4 Color: $1.20 c/u (mín. 500)</li>
+                            <li>Impresión Poster A3: $8.00 c/u (mín. 50)</li>
+                            <li>Encuadernado básico: $12.00 c/u (volúmenes)</li>
+                        </ul>
+                    </div>
+                    <div class="tabla-col">
+                        <h3>Menudeo</h3>
+                        <ul>
+                            <li>A4 Blanco y Negro: $0.50 c/u</li>
+                            <li>A4 Color: $1.80 c/u</li>
+                            <li>Impresión Poster A3: $12.00 c/u</li>
+                            <li>Encuadernado básico: $18.00 c/u</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="detalle">Descuentos por volumen y precios especiales para escuelas y empresas. Contáctanos para entrega y tiempos de producción.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Vista Completa de Productos -->
+    <div class="modal-vista-completa" id="modalVistaCompleta" style="display: none;">
+        <div class="modal-contenido">
+            <div class="modal-header">
+                <h2>Todos Nuestros Productos</h2>
+                <button class="btn-cerrar-modal" onclick="cerrarVistaCompleta()">✕</button>
+            </div>
+
+            <div class="filtros-modal">
+                <button class="filtro-btn activo" onclick="filtrarPorCategoria('Todos')">Todos</button>
+                <button class="filtro-btn" onclick="filtrarPorCategoria('Lápices')">Lápices</button>
+                <button class="filtro-btn" onclick="filtrarPorCategoria('Cuadernos')">Cuadernos</button>
+                <button class="filtro-btn" onclick="filtrarPorCategoria('Colores')">Colores</button>
+                <button class="filtro-btn" onclick="filtrarPorCategoria('Otros')">Otros</button>
+            </div>
+
+            <div id="productosFiltrados" class="productos-modal-grid">
+                <!-- Los productos filtrados se mostrarán aquí -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Beneficios Section -->
+    <section class="beneficios" id="beneficios">
+        <div class="container">
+            <h2>¿Por qué elegir Papelería Express?</h2>
+            <div class="beneficios-grid">
+                <div class="beneficio-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>Calidad Garantizada</h3>
+                    <p>Todos nuestros productos son de marcas reconocidas y pasan rigurosos controles de calidad.</p>
+                </div>
+                <div class="beneficio-item">
+                    <i class="fas fa-truck"></i>
+                    <h3>Envío Rápido</h3>
+                    <p>Entrega en 24-48 horas en toda la región. Envío gratis para compras mayores a $100.</p>
+                </div>
+                <div class="beneficio-item">
+                    <i class="fas fa-coins"></i>
+                    <h3>Precios Competitivos</h3>
+                    <p>Los mejores precios del mercado con descuentos por compra en volumen.</p>
+                </div>
+                <div class="beneficio-item">
+                    <i class="fas fa-headset"></i>
+                    <h3>Atención al Cliente</h3>
+                    <p>Nuestro equipo está disponible para ayudarte en cualquier momento.</p>
+                </div>
+                <div class="beneficio-item">
+                    <i class="fas fa-undo"></i>
+                    <h3>Garantía de Devolución</h3>
+                    <p>30 días para devolver productos si no estás satisfecho, sin preguntas.</p>
+                </div>
+                <div class="beneficio-item">
+                    <i class="fas fa-leaf"></i>
+                    <h3>Eco-Friendly</h3>
+                    <p>Comprometidos con el ambiente usando materiales sostenibles.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonios Section -->
+    <section class="testimonios">
+        <div class="container">
+            <h2>Lo que dicen nuestros clientes</h2>
+            <div class="testimonios-grid">
+                <div class="testimonio-card">
+                    <div class="stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p>"Excelente calidad y precios muy buenos. Mis hijos estaban muy contentos con sus útiles."</p>
+                    <p class="autor">- María García</p>
+                </div>
+                <div class="testimonio-card">
+                    <div class="stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p>"El envío fue muy rápido y todo llegó en perfecto estado. Recomendado 100%."</p>
+                    <p class="autor">- Juan López</p>
+                </div>
+                <div class="testimonio-card">
+                    <div class="stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p>"Perfecto para empezar el ciclo escolar. Todo lo necesario en un solo lugar."</p>
+                    <p class="autor">- Carmen Rodríguez</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <h2>¡Prepárate para el éxito académico!</h2>
+            <p>Obtén 10% de descuento en tu primer pedido</p>
+            <button class="btn btn-primary btn-large" onclick="scrollToSection('paquetes')">Comprar Ahora</button>
+        </div>
+    </section>
+
+    <!-- Contacto Section -->
+    <section class="contacto" id="contacto">
+        <div class="container">
+            <h2>Contacto</h2>
+            <form id="formContacto" class="form-contacto">
+                <div class="form-row">
+                    <input type="text" id="contactNombre" placeholder="Nombre" required>
+                </div>
+                <div class="form-row">
+                    <input type="email" id="contactEmail" placeholder="Correo" required>
+                </div>
+                <div class="form-row">
+                    <textarea id="contactMensaje" placeholder="Mensaje" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Enviar</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Papelería Express</h3>
+                    <p>Tu socio confiable en útiles escolares de calidad.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Enlaces Rápidos</h3>
+                    <ul>
+                        <li><a href="#inicio">Inicio</a></li>
+                        <li><a href="#paquetes">Paquetes</a></li>
+                        <li><a href="#beneficios">Beneficios</a></li>
+                        <li><a href="#contacto">Contacto</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Contacto</h3>
+                    <ul>
+                        <li><i class="fas fa-phone"></i> 7291541450 o 7291070404</li>
+                        <li><i class="fas fa-envelope"></i> angelfj0425@hotmail.com</li>
+                        <li><i class="fas fa-map-marker-alt"></i> San Lorenzo Tepaltitlan, Toluca Estado de Mexico</li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Síguenos</h3>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Papelería Express. Todos los derechos reservados. <a href="#" id="footerAdminLink" class="footer-admin-link" onclick="toggleAdminPanel(); return false;" title="Abrir panel admin (oculto)">Admin</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- FIN DEL CONTENIDO PRINCIPAL -->
+
+
+    <button class="btn-carrito-flotante" id="btnCarritoFlotante" onclick="abrirCarrito()">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="badge" id="carritoBadge">0</span>
+    </button>
+
+    <!-- Modal del Carrito -->
+    <div class="modal-carrito" id="modalCarrito">
+        <div class="carrito-contenedor">
+            <div class="carrito-header">
+                <h2>Mi Carrito</h2>
+                <button class="btn-cerrar-carrito" onclick="cerrarCarrito()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="carrito-items" id="carritoItems">
+                <p style="text-align: center; color: #95A5A6; padding: 40px;">Tu carrito está vacío</p>
+            </div>
+            <div class="carrito-footer">
+                <div class="carrito-total">
+                    <span>Total:</span>
+                    <span id="carritoTotal">$0.00</span>
+                </div>
+                <button class="btn-vaciar-carrito" onclick="vaciarCarrito()">Vaciar Carrito</button>
+                <button class="btn-pedir-whatsapp" onclick="enviarPorWhatsApp()"><i class="fab fa-whatsapp"></i> Pedir por WhatsApp</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel de Administración (oculto) -->
+    <div class="admin-panel-modal" id="admin-panel">
+        <div class="admin-panel-contenido">
+            <div class="admin-header">
+                <h2>Panel de Administración <small style="font-weight:600;color:#888;">(oculto)</small></h2>
+                <div class="admin-acciones">
+                    <small class="admin-ayuda">Abre con <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>A</kbd></small>
+                    <button class="btn btn-secondary" id="btnCerrarAdmin" onclick="cerrarAdminPanel()">Cerrar</button>
+                </div>
+            </div>
+
+            <div class="admin-tabs">
+                <button class="tab-btn active" data-tab="productos">Productos</button>
+                <button class="tab-btn" data-tab="paquetes">Paquetes</button>
+                <button class="tab-btn" data-tab="promos">Promociones</button>
+                <button class="tab-btn" data-tab="etiquetas">Etiquetas</button>
+            </div>
+
+            <div class="admin-body">
+                <!-- Productos -->
+                <div class="admin-tab-panel" id="tab-productos">
+                    <div class="admin-formulario">
+                        <h3>Agregar Producto</h3>
+                        <form id="formAgregarProducto">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="prodNombre">Nombre</label>
+                                    <input id="prodNombre" type="text" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="prodPrecio">Precio</label>
+                                    <input id="prodPrecio" type="number" step="0.01" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="prodStock">Stock</label>
+                                    <input id="prodStock" type="number" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="prodCategoria">Categoría</label>
+                                    <select id="prodCategoria">
+                                        <option>Lápices</option>
+                                        <option>Cuadernos</option>
+                                        <option>Colores</option>
+                                        <option>Otros</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="prodDescripcion">Descripción</label>
+                                <textarea id="prodDescripcion"></textarea>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="prodPromo">Etiqueta promo</label>
+                                    <input id="prodPromo" placeholder="Ej: 20% OFF">
+                                </div>
+                                <div class="form-group">
+                                    <label for="prodFoto">Foto</label>
+                                    <input id="prodFoto" type="file" accept="image/*">
+                                </div>
+                            </div>
+
+                            <div style="margin-top:10px;">
+                                <button class="btn btn-primary" type="submit">Agregar Producto</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="admin-productos">
+                        <h3>Productos Existentes</h3>
+                        <div id="adminProductosList"></div>
+                    </div>
+                </div>
+
+                <!-- Paquetes -->
+                <div class="admin-tab-panel" id="tab-paquetes" style="display:none;">
+                    <div class="admin-formulario">
+                        <h3>Agregar / Editar Paquete</h3>
+                        <form id="formPaqueteAdmin">
+                            <div class="form-group">
+                                <label for="paqueteNombre">Nombre</label>
+                                <input id="paqueteNombre" type="text" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="paquetePrecio">Precio</label>
+                                <input id="paquetePrecio" type="number" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="paqueteItems">Items (una por línea)</label>
+                                <textarea id="paqueteItems" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="paquetePromo">Etiqueta promo</label>
+                                <input id="paquetePromo" type="text">
+                            </div>
+                            <div style="margin-top:10px;">
+                                <button class="btn btn-primary" type="submit">Guardar Paquete</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="admin-paquetes">
+                        <h3>Paquetes Personalizados</h3>
+                        <div id="adminPaquetesList"></div>
+                    </div>
+                </div>
+
+                <!-- Promociones -->
+                <div class="admin-tab-panel" id="tab-promos" style="display:none;">
+                    <h3>Promociones en Paquetes</h3>
+                    <form id="formPromoPaquetes">
+                        <div class="form-row">
+                            <div class="form-group"><label for="promoPreescolar">Preescolar</label><input id="promoPreescolar" type="text"></div>
+                            <div class="form-group"><label for="promoPrimaria13">Primaria 1-3</label><input id="promoPrimaria13" type="text"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label for="promoPrimaria46">Primaria 4-6</label><input id="promoPrimaria46" type="text"></div>
+                            <div class="form-group"><label for="promoSecundaria">Secundaria</label><input id="promoSecundaria" type="text"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label for="promoPrepa">Preparatoria</label><input id="promoPrepa" type="text"></div>
+                            <div class="form-group"><label for="promoLicenciatura">Licenciatura</label><input id="promoLicenciatura" type="text"></div>
+                        </div>
+                        <div style="margin-top:10px;"><button class="btn btn-primary" type="submit">Guardar Promociones</button></div>
+                    </form>
+                </div>
+
+                <!-- Etiquetas -->
+                <div class="admin-tab-panel" id="tab-etiquetas" style="display:none;">
+                    <h3>Etiquetas</h3>
+                    <div class="admin-etiquetas">
+                        <label><input type="checkbox" id="toggleProporcion"> Mostrar etiquetas de proporción (%)</label><br>
+                        <label><input type="checkbox" id="toggleDescuento"> Mostrar etiquetas de descuento (texto)</label>
+                    </div>
+
+                    <hr style="margin:12px 0;">
+
+                    <h3>Protección del panel</h3>
+                    <p id="adminPwdStatus" style="color:#666;margin-bottom:8px;font-size:0.95rem;">Estado: <strong id="adminPwdState">Sin contraseña</strong></p>
+
+                    <div class="admin-formulario">
+                        <div class="form-group">
+                            <label for="adminCurrentPwd">Contraseña actual (si aplica)</label>
+                            <input id="adminCurrentPwd" type="password" placeholder="Contraseña actual">
+                        </div>
+                        <div class="form-group">
+                            <label for="adminNewPwd">Nueva contraseña</label>
+                            <input id="adminNewPwd" type="password" placeholder="Nueva contraseña">
+                        </div>
+                        <div class="form-group">
+                            <label for="adminConfirmPwd">Confirmar contraseña</label>
+                            <input id="adminConfirmPwd" type="password" placeholder="Confirmar">
+                        </div>
+                        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+                            <button class="btn btn-primary" id="btnSaveAdminPwd">Guardar contraseña</button>
+                            <button class="btn btn-secondary" id="btnRemoveAdminPwd">Eliminar contraseña</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de ingreso de contraseña admin -->
+    <div class="admin-password-modal" id="adminPasswordModal">
+        <div class="admin-password-contenido">
+            <h3>Acceso al Panel</h3>
+            <p>Ingresa la contraseña para acceder al panel de administración. Se solicitará cada vez que abras el panel.</p>
+            <p id="adminAttemptsInfo" style="color:#666;margin-bottom:8px;font-size:0.95rem;">Intentos restantes: <strong id="adminAttemptsLeft">3</strong> <span id="adminAttemptsMessage" style="color:#E74C3C;margin-left:8px;font-weight:600;"></span></p>
+            <input id="adminPasswordInput" type="password" placeholder="Contraseña" style="padding:10px;margin:10px 0;width:100%;border-radius:6px;border:1px solid #ddd;">
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button class="btn btn-secondary" id="btnResetAttempts" style="display:none;margin-right:auto;">Reiniciar intentos</button>
+                <button class="btn btn-secondary" id="btnAdminPwdCancel">Cancelar</button>
+                <button class="btn btn-primary" id="btnAdminPwdSubmit">Ingresar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón visible para abrir panel admin (útil si el atajo falla) -->
+    <button id="btnAdminOpenVisible" class="btn-admin-flotante" onclick="toggleAdminPanel()" title="Abrir panel admin (Ctrl+Shift+A)" aria-label="Abrir panel admin">
+        <i class="fas fa-lock"></i>
+    </button>
+
+    <script src="script.js"></script>
+</body>
+</html>
