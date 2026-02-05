@@ -16,10 +16,84 @@ document.querySelectorAll('.nav a').forEach(link => {
 });
 
 // Estado global inicial
-let productos = JSON.parse(localStorage.getItem('productos') || '[]');
+let productos = []; // ahora cargados desde IndexedDB cuando sea posible
 let carrito = JSON.parse(localStorage.getItem('carrito') || '[]');
 let categoriaActual = 'Todos';
 const WHATSAPP_NUMBER = '+527291541450'; // Ajusta si necesitas otro número
+
+// ------- IndexedDB Helpers (almacenamiento más grande, ideal para imágenes) -------
+function idbSupported() {
+    return !!(window.indexedDB);
+}
+
+function openIDB() {
+    return new Promise((resolve, reject) => {
+        if (!idbSupported()) return reject(new Error('IndexedDB no soportado'));
+        const req = indexedDB.open('PapeleriaDB', 1);
+        req.onupgradeneeded = function(e) {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('productos')) {
+                db.createObjectStore('productos', { keyPath: 'id' });
+            }
+        };
+        req.onsuccess = function(e) { resolve(e.target.result); };
+        req.onerror = function(e) { reject(e.target.error); };
+    });
+}
+
+async function getProductosFromIDB() {
+    try {
+        const db = await openIDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction('productos', 'readonly');
+            const store = tx.objectStore('productos');
+            const req = store.getAll();
+            req.onsuccess = () => resolve(req.result || []);
+            req.onerror = () => reject(req.error);
+        });
+    } catch (e) {
+        console.warn('getProductosFromIDB falló:', e);
+        return [];
+    }
+}
+
+async function saveProductosToIDB(items) {
+    if (!idbSupported()) throw new Error('IndexedDB no soportado');
+    const db = await openIDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction('productos', 'readwrite');
+        const store = tx.objectStore('productos');
+        // Limpiamos y guardamos todo (simple migración en lote)
+        const clearReq = store.clear();
+        clearReq.onsuccess = () => {
+            let pending = items.length;
+            if (pending === 0) return resolve();
+            items.forEach(item => {
+                const r = store.put(item);
+                r.onsuccess = () => { if (--pending === 0) resolve(); };
+                r.onerror = () => { if (--pending === 0) resolve(); };
+            });
+        };
+        clearReq.onerror = () => reject(clearReq.error);
+    });
+}
+
+// Función auxiliar para intentar migrar desde localStorage a IDB
+async function migrateLocalStorageProductosToIDB() {
+    try {
+        const local = JSON.parse(localStorage.getItem('productos') || '[]');
+        if (local && local.length > 0 && idbSupported()) {
+            await saveProductosToIDB(local);
+            // opcional: eliminar localStorage para evitar duplicados y ahorrar espacio
+            try { localStorage.removeItem('productos'); } catch (e) { /* ignore */ }
+            productos = local;
+            return true;
+        }
+    } catch (e) { console.warn('Migración falló:', e); }
+    return false;
+}
+
+// -------------------------------------------------------------------------------
 
 // Utilidad para convertir archivo a base64 (subida de imágenes)
 function archivoABase64(file) {
@@ -31,24 +105,103 @@ function archivoABase64(file) {
     });
 }
 
+// Comprime la imagen usando canvas antes de guardarla en localStorage para reducir tamaño en móviles
+async function compressImage(file, maxWidth = 800, quality = 0.7) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+            let w = img.width;
+            let h = img.height;
+            if (w > maxWidth) {
+                h = Math.round(h * maxWidth / w);
+                w = maxWidth;
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            canvas.toBlob((blob) => {
+                if (!blob) { URL.revokeObjectURL(url); return reject(new Error('Error compressing image')); }
+                const reader = new FileReader();
+                reader.onload = () => { URL.revokeObjectURL(url); resolve(reader.result); };
+                reader.onerror = (err) => { URL.revokeObjectURL(url); reject(err); };
+                reader.readAsDataURL(blob);
+            }, 'image/jpeg', quality);
+        };
+        img.onerror = (e) => { URL.revokeObjectURL(url); reject(e); };
+        img.src = url;
+    });
+} 
+
 // Guardar productos y refrescar vistas
-function guardarProductos() {
-    localStorage.setItem('productos', JSON.stringify(productos));
+async function guardarProductos() {
+    // Intentar guardar en IndexedDB (más tolerante con imágenes grandes)
+    if (idbSupported()) {
+        try {
+            await saveProductosToIDB(productos);
+        } catch (e) {
+            console.error('Error saving productos to IndexedDB:', e);
+            // intentar fallback a localStorage
+            try {
+                localStorage.setItem('productos', JSON.stringify(productos));
+            } catch (err) {
+                console.error('Error saving productos to localStorage (fallback):', err);
+                alert('No se pudieron guardar los productos: espacio insuficiente en el almacenamiento. Intenta usar imágenes más pequeñas o reducir la calidad.');
+                return;
+            }
+        }
+    } else {
+        // Si no hay IndexedDB, usar localStorage
+        try {
+            localStorage.setItem('productos', JSON.stringify(productos));
+        } catch (e) {
+            console.error('Error saving productos to localStorage:', e);
+            alert('No se pudieron guardar los productos: espacio insuficiente en el almacenamiento. Intenta usar imágenes más pequeñas o reducir la calidad.');
+            return;
+        }
+    }
+
     mostrarProductosAdmin();
     mostrarPaquetesEnPagina();
     mostrarProductosEnCatalogo();
     applyLabelToggles();
 } 
 
-// Cargar productos (si no hay, sembrar ejemplos)
-function cargarProductos() {
+// Cargar productos (usa IndexedDB si está disponible, migra desde localStorage si es necesario)
+async function cargarProductos() {
+    // Intentar desde IndexedDB
+    if (idbSupported()) {
+        try {
+            const idbItems = await getProductosFromIDB();
+            if (idbItems && idbItems.length > 0) {
+                productos = idbItems;
+                mostrarProductosEnCatalogo();
+                actualizarBadgeCarrito();
+                return;
+            }
+            // Si IDB está vacío, intentar migrar desde localStorage
+            const migrated = await migrateLocalStorageProductosToIDB();
+            if (migrated) {
+                mostrarProductosEnCatalogo();
+                actualizarBadgeCarrito();
+                return;
+            }
+        } catch (e) {
+            console.warn('Error leyendo desde IndexedDB:', e);
+            // continuamos al fallback
+        }
+    }
+
+    // Fallback a localStorage (o si IDB no disponible)
     productos = JSON.parse(localStorage.getItem('productos') || '[]');
     if (productos.length === 0) {
         productos = [
             { id: Date.now()+1, nombre: 'Lápiz HB', precio: 0.5, stock: 100, categoria: 'Lápices', descripcion: 'Lápiz de grafito', foto: 'https://via.placeholder.com/300x250?text=Lápiz+HB', promo: '' },
             { id: Date.now()+2, nombre: 'Cuaderno A4', precio: 2.5, stock: 50, categoria: 'Cuadernos', descripcion: 'Cuaderno rayado 100 hojas', foto: 'https://via.placeholder.com/300x250?text=Cuaderno+A4', promo: '' }
         ];
-        guardarProductos();
+        await guardarProductos();
     } else {
         mostrarProductosEnCatalogo();
     }
@@ -145,12 +298,12 @@ const revealOnScroll = () => {
 };
 
 // Event listeners
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Quitar cualquier HTML residual del panel admin del DOM para "borrarlo" en tiempo de ejecución
     document.querySelectorAll('.modal-admin-login, .admin-panel').forEach(el => el.remove());
 
     revealOnScroll();
-    cargarProductos();
+    await cargarProductos();
     // mostrarProductosAdmin();  // Eliminado - admin no existe
     cargarPromosPaquetes();
     // Manejar formulario de promociones de paquetes
@@ -381,10 +534,16 @@ function agregarPaqueteAlCarrito(nombre, precio, itemsStr) {
 
 // Guardar carrito en localStorage
 function guardarCarrito() {
-    localStorage.setItem('carrito', JSON.stringify(carrito));
+    try {
+        localStorage.setItem('carrito', JSON.stringify(carrito));
+    } catch (e) {
+        console.error('Error saving carrito to localStorage:', e);
+        alert('No se pudo guardar el carrito en el almacenamiento local. Intenta vaciarlo o usar imágenes más pequeñas.');
+        return;
+    }
     actualizarBadgeCarrito();
     mostrarCarritoItems();
-}
+} 
 
 // Actualizar badge del carrito
 function actualizarBadgeCarrito() {
@@ -426,25 +585,67 @@ if (formAgregarProducto) {
         const promo = document.getElementById('prodPromo').value.trim();
         const fotoInput = document.getElementById('prodFoto');
 
-        if (nombre && precio && stock !== null && categoria && fotoInput.files.length > 0) {
+        if (nombre && !isNaN(precio) && !isNaN(stock) && categoria && fotoInput.files.length > 0) {
             try {
-                const foto = await archivoABase64(fotoInput.files[0]);
-                const nuevoProducto = {
-                    id: Date.now(),
-                    nombre,
-                    precio,
-                    stock,
-                    categoria,
-                    descripcion: descripcion || 'Sin descripción',
-                    foto,
-                    promo
-                };
-                productos.push(nuevoProducto);
-                guardarProductos();
-                formAgregarProducto.reset();
-                alert('✓ Producto agregado exitosamente');
+                const file = fotoInput.files[0];
+                const compressedDataUrl = await compressImage(file, 800, 0.7);
+                const fotoBlob = base64ToBlob(compressedDataUrl);
+
+                if (isRemoteAuthenticated()) {
+                    // subir al servidor
+                    const fd = new FormData();
+                    fd.append('nombre', nombre);
+                    fd.append('precio', precio);
+                    fd.append('stock', stock);
+                    fd.append('categoria', categoria);
+                    fd.append('descripcion', descripcion || '');
+                    fd.append('promo', promo || '');
+                    fd.append('foto', fotoBlob, file.name || 'photo.jpg');
+
+                    try {
+                        const row = await submitProductToServer(fd);
+                        const serverUrl = localStorage.getItem('papeleria_server_url') || '';
+                        const prod = {
+                            id: Date.now(),
+                            serverId: row.id,
+                            nombre: row.nombre,
+                            precio: parseFloat(row.precio),
+                            stock: parseInt(row.stock),
+                            categoria: row.categoria,
+                            descripcion: row.descripcion || '',
+                            foto: row.foto ? (serverUrl.replace(/\/$/, '') + row.foto) : '',
+                            promo: row.promo || ''
+                        };
+                        productos.push(prod);
+                        await guardarProductos();
+                        formAgregarProducto.reset();
+                        alert('✓ Producto agregado en el servidor');
+                    } catch (err) {
+                        console.error('Error subiendo al servidor:', err);
+                        alert('Error al subir el producto al servidor. ' + (err.message || ''));
+                    }
+
+                } else {
+                    // comportamiento local (base64)
+                    const nuevoProducto = {
+                        id: Date.now(),
+                        nombre,
+                        precio,
+                        stock,
+                        categoria,
+                        descripcion: descripcion || 'Sin descripción',
+                        foto: compressedDataUrl,
+                        promo
+                    };
+                    productos.push(nuevoProducto);
+                    await guardarProductos();
+                    formAgregarProducto.reset();
+                    alert('✓ Producto agregado exitosamente');
+                }
+
             } catch (error) {
-                alert('Error al procesar la imagen. Por favor intenta de nuevo.');
+                console.error('Error al agregar producto:', error);
+                alert('Error al procesar o guardar la imagen. Intenta con una imagen más pequeña o desde otro dispositivo.');
             }
         } else {
             alert('Por favor completa todos los campos y selecciona una imagen');
@@ -481,10 +682,10 @@ function mostrarProductosAdmin() {
 }
 
 // Eliminar producto
-function eliminarProducto(id) {
+async function eliminarProducto(id) {
     if (confirm('¿Estás seguro de que deseas eliminar este producto?')) {
         productos = productos.filter(p => p.id !== id);
-        guardarProductos();
+        await guardarProductos();
         alert('✓ Producto eliminado');
     }
 }
@@ -693,9 +894,10 @@ async function guardarCambiosProducto(id) {
 
     if (fotoInput.files.length > 0) {
         try {
-            fotoNueva = await archivoABase64(fotoInput.files[0]);
+            fotoNueva = await compressImage(fotoInput.files[0], 800, 0.7);
         } catch (error) {
-            alert('Error al procesar la imagen. Por favor intenta de nuevo.');
+            console.error('Error al procesar imagen de edición:', error);
+            alert('Error al procesar la imagen. Por favor intenta de nuevo con otra imagen.');
             return;
         }
     }
@@ -708,7 +910,31 @@ async function guardarCambiosProducto(id) {
     producto.foto = fotoNueva;
     producto.promo = document.getElementById('editPromo').value.trim();
 
-    guardarProductos();
+    // Si está autenticado y el producto tiene serverId, actualizar en el servidor
+    if (isRemoteAuthenticated() && producto.serverId) {
+        try {
+            const fd = new FormData();
+            fd.append('nombre', producto.nombre);
+            fd.append('precio', producto.precio);
+            fd.append('stock', producto.stock);
+            fd.append('categoria', producto.categoria);
+            fd.append('descripcion', producto.descripcion || '');
+            fd.append('promo', producto.promo || '');
+            if (fotoInput.files.length > 0) {
+                const compressed = await compressImage(fotoInput.files[0], 800, 0.7);
+                const blob = base64ToBlob(compressed);
+                fd.append('foto', blob, fotoInput.files[0].name || 'photo.jpg');
+            }
+            const updated = await submitProductUpdateToServer(producto.serverId, fd);
+            const serverUrl = localStorage.getItem('papeleria_server_url') || '';
+            producto.foto = updated.foto ? (serverUrl.replace(/\/$/, '') + updated.foto) : producto.foto;
+        } catch (err) {
+            console.error('Error actualizando producto en servidor:', err);
+            mostrarNotificacion('Error sincronizando con el servidor (se guardó localmente)');
+        }
+    }
+
+    await guardarProductos();
     cerrarEditarProducto();
     filtrarPorCategoria(categoriaActual);
     alert('✓ Producto actualizado exitosamente');
@@ -976,16 +1202,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     updateAdminPwdState();
 
-    // Establecer contraseña por defecto si no existe (cámbiala después en el panel)
-    (async () => {
-        if (!localStorage.getItem('adminPasswordHash')) {
-            const DEFAULT_ADMIN_PWD = 'papeleria2026';
-            const h = await hashPassword(DEFAULT_ADMIN_PWD);
-            localStorage.setItem('adminPasswordHash', h);
-            updateAdminPwdState();
-            alert('Contraseña admin inicial establecida: ' + DEFAULT_ADMIN_PWD + '. Cámbiala desde el panel de administración.');
-        }
-    })();
+    // No se crea una contraseña por defecto para evitar exponer credenciales al compartir el sitio.
+    // Si no hay contraseña, el panel permanecerá sin protección hasta que se establezca una desde la UI.
+    if (!localStorage.getItem('adminPasswordHash')) {
+        updateAdminPwdState();
+    }
 
     // Inicializar contador de intentos (en sessionStorage, se reinicia al cerrar pestaña)
     if (!sessionStorage.getItem(ADMIN_ATTEMPTS_KEY)) {
@@ -1178,6 +1399,127 @@ function updateAdminPwdState() {
     stateEl.textContent = exists ? 'Protegido' : 'Sin contraseña';
 }
 
+// ------------------ Integración con servidor remoto ------------------
+function isRemoteAuthenticated() {
+    return !!localStorage.getItem('papeleria_token');
+}
+
+function updateServerStatusUI() {
+    const statusText = document.getElementById('serverStatusText');
+    const logoutBtn = document.getElementById('btnServerLogout');
+    const loginBtn = document.getElementById('btnServerLogin');
+    if (!statusText) return;
+    const token = localStorage.getItem('papeleria_token');
+    const url = localStorage.getItem('papeleria_server_url');
+    if (token && url) {
+        statusText.textContent = 'Conectado (' + url + ')';
+        if (logoutBtn) logoutBtn.style.display = 'inline-block';
+        if (loginBtn) loginBtn.style.display = 'none';
+    } else {
+        statusText.textContent = 'Desconectado';
+        if (logoutBtn) logoutBtn.style.display = 'none';
+        if (loginBtn) loginBtn.style.display = 'inline-block';
+    }
+}
+
+async function remoteLogin(e) {
+    e && e.preventDefault && e.preventDefault();
+    const url = document.getElementById('serverUrl').value.trim();
+    const email = document.getElementById('serverEmail').value.trim();
+    const password = document.getElementById('serverPassword').value;
+    if (!url || !email || !password) { alert('Proporciona URL, email y contraseña'); return; }
+    try {
+        const res = await fetch((url.replace(/\/$/, '') + '/api/auth/login'), {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        if (!res.ok) {
+            const j = await res.json().catch(()=>({}));
+            alert('Error al autenticar: ' + (j.error || res.statusText));
+            return;
+        }
+        const j = await res.json();
+        localStorage.setItem('papeleria_token', j.token);
+        localStorage.setItem('papeleria_server_url', url.replace(/\/$/, ''));
+        updateServerStatusUI();
+        mostrarNotificacion('Conectado al servidor');
+    } catch (err) {
+        console.error('Login remoto falló:', err);
+        alert('No se pudo conectar al servidor. Revisa la URL y la conexión.');
+    }
+}
+
+function remoteLogout() {
+    localStorage.removeItem('papeleria_token');
+    localStorage.removeItem('papeleria_server_url');
+    updateServerStatusUI();
+    mostrarNotificacion('Desconectado del servidor');
+}
+
+function base64ToBlob(dataURL) {
+    const parts = dataURL.split(',');
+    const m = parts[0].match(/:(.*?);/);
+    const mime = m ? m[1] : 'image/jpeg';
+    const binary = atob(parts[1]);
+    const array = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) array[i] = binary.charCodeAt(i);
+    return new Blob([array], { type: mime });
+}
+
+async function submitProductToServer(formData) {
+    const token = localStorage.getItem('papeleria_token');
+    const url = localStorage.getItem('papeleria_server_url');
+    if (!token || !url) throw new Error('No conectado al servidor');
+    const res = await fetch(url + '/api/products', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: formData });
+    if (!res.ok) throw new Error('Error guardando producto en servidor');
+    return await res.json();
+}
+
+async function submitProductUpdateToServer(id, formData) {
+    const token = localStorage.getItem('papeleria_token');
+    const url = localStorage.getItem('papeleria_server_url');
+    if (!token || !url) throw new Error('No conectado al servidor');
+    const res = await fetch(url + '/api/products/' + id, { method: 'PUT', headers: { Authorization: 'Bearer ' + token }, body: formData });
+    if (!res.ok) throw new Error('Error actualizando producto en servidor');
+    return await res.json();
+}
+
+async function migrateProductsToServer() {
+    if (!isRemoteAuthenticated()) { alert('Conéctate al servidor primero'); return; }
+    if (!confirm('¿Migrar todos los productos locales al servidor? Esto intentará subir imágenes si están en base64.')) return;
+    const total = productos.length;
+    let success = 0;
+    for (let i = 0; i < productos.length; i++) {
+        const p = productos[i];
+        try {
+            const fd = new FormData();
+            fd.append('nombre', p.nombre);
+            fd.append('precio', p.precio || 0);
+            fd.append('stock', p.stock || 0);
+            fd.append('categoria', p.categoria || '');
+            fd.append('descripcion', p.descripcion || '');
+            fd.append('promo', p.promo || '');
+            if (p.foto && p.foto.startsWith('data:')) {
+                const b = base64ToBlob(p.foto);
+                fd.append('foto', b, (p.nombre||'photo') + '.jpg');
+            }
+            const row = await submitProductToServer(fd);
+            // marcar como migrado y actualizar foto a URL completa
+            p.serverId = row.id;
+            const serverUrl = localStorage.getItem('papeleria_server_url') || '';
+            p.foto = row.foto ? (serverUrl.replace(/\/$/, '') + row.foto) : p.foto;
+            success++;
+            mostrarNotificacion(`✓ Migrado: ${p.nombre}`);
+        } catch (err) {
+            console.error('Error migrando producto', p.nombre, err);
+            mostrarNotificacion(`✗ Error: ${p.nombre}`);
+        }
+    }
+    await guardarProductos();
+    alert(`Migración finalizada. Migrados: ${success}/${total}`);
+}
+
+// ---------------------------------------------------------------------
 
 
 
